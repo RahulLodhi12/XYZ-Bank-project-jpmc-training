@@ -15,6 +15,7 @@ public class DaoClass {
     public static final String DB_PASSWORD = "#RoopRaj89";
 
     public void connectToDB(){
+        Scanner sc = new Scanner(System.in);
         try {
             //1. Load the Driver
             Class.forName(DRIVER_NAME);
@@ -22,54 +23,19 @@ public class DaoClass {
             //2. Connect to the Database
             Connection connection = DriverManager.getConnection(URL_TO_CONNECT,DB_USERNAME,DB_PASSWORD);
 
-            //3. Prepared Statement - inside the "methods"
-            Scanner sc = new Scanner(System.in);
-
+            //3. Prepared Statement - inside these "methods"
             //createAccount() method
-//            System.out.println("Enter CustomerName, Branch, Balance:");
-//
-//            //Generating Unique Random Account Number every-time.
-//            long timestamp = System.currentTimeMillis(); // 13-digit positive number
-//            int randomNum = 10000 + new Random().nextInt(90000); // 5-digit positive number
-//            String accNo = timestamp + "" + randomNum; // 13 + 5 = 18-digit positive number (as String)
-//            String name = sc.nextLine();
-//            String branch = sc.nextLine();
-//            Double balance = sc.nextDouble();
-//            createAccount(connection,new Customer(accNo,name,branch,balance));
+            System.out.println("Enter CustomerName, Branch, Balance: To Create Bank Account");
 
-            //deposit() method - login later
-//            System.out.println("Enter Amount you want to Deposit: ");
-//            Double amt = sc.nextDouble(); sc.nextLine();
-//            System.out.println("Enter the AccountNumber to which you want to Transfer: ");
-//            String accNo = sc.nextLine();
-//            deposit(connection,new Customer(accNo),amt);
+            //Generating Unique Random Account Number every-time.
+            long timestamp = System.currentTimeMillis(); // 13-digit positive number
+            int randomNum = 10000 + new Random().nextInt(90000); // 5-digit positive number
+            String accNo = timestamp + "" + randomNum; // 13 + 5 = 18-digit positive number (as String)
+            String name = sc.nextLine();
+            String branch = sc.nextLine();
+            Double balance = sc.nextDouble();
 
-            //withdraw() method
-//            System.out.println("Enter Amount you want to Withdraw: ");
-//            Double amt = sc.nextDouble(); sc.nextLine();
-//            System.out.println("Enter the Your AccountNumber: ");
-//            String accNo = sc.nextLine();
-//            withdraw(connection,new Customer(accNo),amt);
-
-            //fund transfer - login later
-//            System.out.println("Enter Amount you want to Transfer: ");
-//            Double amt = sc.nextDouble(); sc.nextLine();
-//            System.out.println("Enter the AccountNumber From which you want to Send Money: ");
-//            String accNo1 = sc.nextLine();
-//            System.out.println("Enter the AccountNumber To which you want to Receive Money: ");
-//            String accNo2 = sc.nextLine();
-//            fundTransfer(connection,new Customer(accNo1), new Customer(accNo2), amt);
-
-            //print transactions
-//            System.out.println("Enter AccountNumber you want see Transaction History: ");
-//            String accNo = sc.nextLine();
-//            printTransactions(connection,new Customer(accNo));
-
-            //login() method
-            System.out.println("Enter your AccountNumber and Pin to Login: ");
-            String accNo = sc.nextLine();
-            String pin = sc.nextLine();
-            customerLogin(connection, new Login(accNo,pin));
+            createAccount(connection,new Customer(accNo,name,branch,balance));
 
             //4. Close connection
             connection.close();
@@ -80,6 +46,8 @@ public class DaoClass {
     }
 
     void customerLogin(Connection connection, Login login) throws SQLException {
+        Scanner sc = new Scanner(System.in);
+
         //Write a Query
         String query = "select * from login where AccountNumber=?";
 
@@ -93,6 +61,47 @@ public class DaoClass {
         ResultSet resultSet = preparedStatement.executeQuery();
         if(resultSet.next()){
             System.out.println("Login Successfully..");
+
+            while (true){
+                System.out.println("1. Deposit");
+                System.out.println("2. Withdraw");
+                System.out.println("3. Fund Transfer");
+                System.out.println("4. Print Transactions");
+                System.out.println("5. Exit");
+                System.out.println("Pick your choice[1-5]: ");
+                int choice = sc.nextInt();
+
+                if(choice==1){
+                    //deposit
+                    System.out.println("Enter Amount you want to Deposit: ");
+                    Double amt = sc.nextDouble();
+                    deposit(connection,new Customer(login.getAccountNumber()),amt);
+                }
+                else if(choice==2){
+                    //withdraw
+                    System.out.println("Enter Amount you want to Withdraw: ");
+                    Double amt = sc.nextDouble();
+                    withdraw(connection,new Customer(login.getAccountNumber()),amt);
+                }
+                else if(choice==3){
+                    //fund transfer
+                    System.out.println("Enter Amount you want to Transfer: ");
+                    Double amt = sc.nextDouble(); sc.nextLine();
+                    System.out.println("Enter the AccountNumber To which you want to Send Money: ");
+                    String accNo2 = sc.nextLine();
+                    fundTransfer(connection,new Customer(login.getAccountNumber()), new Customer(accNo2), amt);
+                }
+                else if(choice==4){
+                    //print transactions
+                    System.out.println("Transaction History: ");
+                    printTransactions(connection,new Customer(login.getAccountNumber()));
+                }
+                else if(choice==5){
+                    System.out.println("Exit..");
+                    return;
+                }
+
+            }
         }
         else{
             System.out.println("Login Failed..");
@@ -102,6 +111,8 @@ public class DaoClass {
 
 
     void createAccount(Connection connection, Customer customer) throws SQLException {
+        Scanner sc = new Scanner(System.in);
+
         //Write a Query
         String query = "insert into customer(AccountNumber,CustomerName,Branch,Balance) values(?,?,?,?)";
 
@@ -121,8 +132,13 @@ public class DaoClass {
 
         //Execute the Query
         if(preparedStatement.executeUpdate()>0){
-            generateLoginCredentials(connection, customer);
             System.out.println("Customer Account Created Successfully..");
+            generateLoginCredentials(connection, customer);
+            System.out.println("Now Login..");
+            System.out.println("Enter your AccountNumber and Pin to Login: ");
+            String accNo = sc.nextLine();
+            String pin = sc.nextLine();
+            customerLogin(connection, new Login(accNo,pin));
         }
         else{
             System.out.println("Process Failed..");
